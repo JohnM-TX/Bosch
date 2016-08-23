@@ -35,25 +35,26 @@ nums[, station := substr(feature, 1,6)]
 nums[, feature := NULL] 
 
 # put it together into one long skinny table
-cats <- rbind(cats, nums)
+parts <- rbind(cats, nums)
 rm(nums)
-gc()
-
-# aggregate at the station level
-catsum <- cats[, .(meas = base::mean(as.numeric(measurement), na.rm = TRUE)), by= .(station, Id)]
-# catsum <- cats[, .(meas = mean(as.numeric(measurement), na.rm = TRUE)), by= .(station, Id)]
 rm(cats)
 gc()
 
+# aggregate at the station level
+partssum <- parts[, .(meas = base::mean(as.numeric(measurement), na.rm = TRUE)), by= .(station, Id)]
+# partssum <- parts[, .(meas = mean(as.numeric(measurement), na.rm = TRUE)), by= .(station, Id)]
+rm(parts)
+gc()
+
 #re-reshape and clean up
-catsum =  dcast(catsum, Id ~ station, value.var="meas")
-setnames(catsum, c("L0_S0_", "L0_S1_", "L0_S2_", "L0_S3_", "L0_S4_", "L0_S5_"
+partssum =  dcast(partssum, Id ~ station, value.var="meas")
+setnames(partssum, c("L0_S0_", "L0_S1_", "L0_S2_", "L0_S3_", "L0_S4_", "L0_S5_"
                  , "L0_S6_" , "L0_S7_", "L0_S8_", "L0_S9_")
                , c("L0_S00", "L0_S01", "L0_S02", "L0_S03", "L0_S04", "L0_S05" 
                  , "L0_S06", "L0_S07", "L0_S08", "L0_S09")
         )
 
-write_csv(catsum, "prodfams1.csv") # i need to get new beta version of data.table with fwrite!
+write_csv(partssum, "prodfams1.csv") # i need to get new beta version of data.table with fwrite!
 
 
 
@@ -61,7 +62,7 @@ write_csv(catsum, "prodfams1.csv") # i need to get new beta version of data.tabl
 ##### produce the Visualization ###
 ###################################
 
-setDF(prodfams)
+setDF(partssum)
 library(VIM)
 
 png(filename="flowpaths.png",  # use this device for scalable, high-res graphics
@@ -73,9 +74,9 @@ png(filename="flowpaths.png",  # use this device for scalable, high-res graphics
     res=300)
 
 # show the data by volume
-miceplot <- aggr(alldata[, -c(1)], col=c("dodgerblue","lightgray"),
+miceplot <- aggr(partssum[, -c(1)], col=c("dodgerblue","lightgray"),
                  numbers=TRUE, combined=TRUE, varheight=TRUE, border=NA,
                  sortVars=FALSE, sortCombs=FALSE, ylabs=c("Product Families"),
-                 labels=names(alldata[, 1]), cex.axis=.7)
+                 labels=names(partssum[, 1]), cex.axis=.7)
 dev.off()
 
